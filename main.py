@@ -1,8 +1,25 @@
 import os
 import sys
+import io
 import threading
 import webview
 import time
+
+# Globally force UTF-8 Terminal Stream Encoding to prevent PyInstaller Windows charmap crashes
+try:
+    if sys.stdout is not None and hasattr(sys.stdout, 'buffer'):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    if sys.stderr is not None and hasattr(sys.stderr, 'buffer'):
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+except Exception:
+    pass
+
+def safe_print(*args, **kwargs):
+    """Fallback secure logger for unmapped visual binaries."""
+    try:
+        print(*args, **kwargs)
+    except Exception:
+        pass
 import requests
 import urllib.parse
 
@@ -122,14 +139,14 @@ class BackendApi:
             # Immediately run the NLP structure mapping natively (Stage 2)
             answer_json = execute_nlp_extraction(
                 clean_text=self._last_corpus,
-                logger=print
+                logger=safe_print
             )
             
             # Store structural mapping natively for fallback AI routing
             self._last_json = answer_json
             
             self.update_status("Finalizing Response", 100)
-            print("[Backend API] Scrape & Extract successfully completed natively.")
+            safe_print("[Backend API] Scrape & Extract successfully completed natively.")
             
             return {"success": True, "answer": answer_json}
             
@@ -148,7 +165,7 @@ class BackendApi:
             prompt=text,
             structured_data_json=self._last_json,
             raw_text=self._last_corpus,
-            logger=print
+            logger=safe_print
         )
         
         return answer_json
