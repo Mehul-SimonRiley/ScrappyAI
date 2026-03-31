@@ -1,6 +1,7 @@
 import os
 import sys
 import io
+import json
 import threading
 import webview
 import time
@@ -162,13 +163,18 @@ class BackendApi:
                 logger=safe_print
             )
             
-            # Store structural mapping natively for fallback AI routing
+            # Store structural mapping natively for fallback AI routing securely
             self._last_json = answer_json
             
             self.update_status("Finalizing Response", 100)
             safe_print("[Backend API] Scrape & Extract successfully completed natively.")
             
-            return {"success": True, "answer": answer_json}
+            # UI Masking: Hide the raw JSON dictionary and invite the User to trigger Stage 3 Generative Fallback
+            ui_response = json.dumps([{
+                "Generated_Insight": "### 🚀 Data Extraction Complete!\\n\\nI have successfully scraped and structurally cached all targeted contexts from the website entirely offline! Your payload is securely loaded in system memory.\\n\\n**Please type your analytical prompt into the textbox below** (e.g., *'Extract all restaurant reviews'*) to execute the Qwen Fallback reasoning engine over this specific payload!"
+            }])
+            
+            return {"success": True, "answer": ui_response}
             
         except Exception as e:
             return {"success": False, "error": f"Fatal Backend Operations Error: {str(e)}"}

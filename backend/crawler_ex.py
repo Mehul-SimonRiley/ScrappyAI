@@ -260,17 +260,8 @@ def execute_scrape_only(target_url, logger=print):
     clean_text_dict = cleaner.pipeline({target_url: ejected_html}, logger=logger)
     clean_text = clean_text_dict.get(target_url, "")
     
-    raw_debug_filepath = "raw_debug_output.txt"
-    clean_debug_filepath = "scraped_debug_output.txt"
-    try:
-        with open(raw_debug_filepath, "w", encoding="utf-8") as f:
-            f.write(ejected_html)
-        with open(clean_debug_filepath, "w", encoding="utf-8") as f:
-            f.write(clean_text)
-        logger(f"   -> [Debug] Dumped {len(ejected_html)} byte raw DOM and Clean Tokens to purely offline logs natively.")
-    except Exception as e:
-        logger(f"   -> [Debug Warning] Could not write offline cache: {e}")
-
+    # Purge all physical disk IO logging. Data flows natively in-memory.
+    logger(f"   -> [Debug] Passing {len(ejected_html)} byte raw DOM into Text Normalizer strictly offline.")
     # Return the clean text entirely for Stage 2 operations
     return {"success": True, "clean_text": clean_text}
 
@@ -285,16 +276,10 @@ def execute_nlp_extraction(clean_text, logger=print):
     start_time = time.time()
     
     try:
-        import spacy
-        try:
-            logger("   -> Booting spaCy 'en_core_web_sm' NER engine...")
-            nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            logger("   -> Booting failed: downloading 'en_core_web_sm' model natively...")
-            import subprocess
-            subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
-            nlp = spacy.load("en_core_web_sm")
-            
+        logger("   -> Booting internal spaCy 'en_core_web_sm' NER engine natively...")
+        # Direct Python import mathematically forces PyInstaller to bundle the model successfully without crashing OS terminal limits
+        import en_core_web_sm
+        nlp = en_core_web_sm.load()
         doc = nlp(clean_text[:100000]) # Cap size to 100k for performance
         
         # 1. Advanced Structural Entity Detection
