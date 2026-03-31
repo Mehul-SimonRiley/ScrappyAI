@@ -6,20 +6,40 @@ import webview
 import time
 
 # Globally force UTF-8 Terminal Stream Encoding to prevent PyInstaller Windows charmap crashes
+class DummyStream:
+    def write(self, *args, **kwargs): pass
+    def flush(self, *args, **kwargs): pass
+    
 try:
-    if sys.stdout is not None and hasattr(sys.stdout, 'buffer'):
+    if sys.stdout is None or getattr(sys.stdout, 'closed', True):
+        sys.stdout = DummyStream()
+    else:
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    if sys.stderr is not None and hasattr(sys.stderr, 'buffer'):
+        
+    if sys.stderr is None or getattr(sys.stderr, 'closed', True):
+        sys.stderr = DummyStream()
+    else:
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 except Exception:
-    pass
+    sys.stdout = DummyStream()
+    sys.stderr = DummyStream()
 
 def safe_print(*args, **kwargs):
     """Fallback secure logger for unmapped visual binaries."""
     try:
-        print(*args, **kwargs)
+        import sys
+        
+        # If running in --noconsole mode, stdout might be completely None or explicitly closed.
+        if sys.stdout is None or getattr(sys.stdout, 'closed', True):
+            return
+            
+        sys.stdout.write(" ".join(map(str, args)) + kwargs.get("end", "\\n"))
+        sys.stdout.flush()
     except Exception:
         pass
+
+import builtins
+builtins.print = safe_print
 import requests
 import urllib.parse
 
@@ -199,13 +219,13 @@ def main():
     api.set_window(window)
     
     def on_closed():
-        print("[System] Desktop Window Closed. Terminating background CUDA threads instantly...")
+        safe_print("[System] Desktop Window Closed. Terminating background CUDA threads instantly...")
         import os
         os._exit(0) # Brutally and safely kill all C++ inferencing threads to prevent ghost processes
         
     window.events.closed += on_closed
     
-    print("[System] Starting PyWebView Desktop GUI using internal HTTP Server...")
+    safe_print("[System] Starting PyWebView Desktop GUI using internal HTTP Server...")
     # Start the application loop with http_server to resolve local CSS/JS correctly
     # Disable DevTools popup completely in Production Desktop Application!
     webview.start(debug=False, http_server=True)
