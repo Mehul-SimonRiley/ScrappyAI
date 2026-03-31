@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScrappyAI - Web Crawler</title>
+    <!-- Importing modern Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons for modern minimalist icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="light-theme">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="ph-fill ph-robot"></i>
+                <h2>ScrappyAI</h2>
+            </div>
+            <nav>
+                <button class="nav-btn active" id="nav-home">
+                    <i class="ph ph-house"></i> Dashboard
+                </button>
+                <button class="nav-btn" id="nav-chat">
+                    <i class="ph ph-list-numbers"></i> Extraction Results
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="theme-toggle">
+                    <i class="ph ph-moon"></i> Dark Mode
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h1 id="page-title">Web Crawler & Scraper Sandbox</h1>
+            </header>
+
+            <!-- Custom Authorization Modal (Triggered by Python Firewalls) -->
+            <div id="auth-modal" class="modal-overlay hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
+                <div class="card glass-card" style="max-width: 420px; padding: 30px; text-align: center; border: 1px solid var(--border-subtle); background-color: var(--bg-surface); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <i class="ph-fill ph-shield-warning" style="color: #ff9800; font-size: 48px; margin-bottom: 15px;"></i>
+                    <h3 style="margin-bottom: 15px; color: var(--text-main); font-size: 20px;">Anti-Bot Defense Detected</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 15px; line-height: 1.5;">The native HTTP spider was intercepted by a Cloudflare/Datadog firewall on the target domain.<br><br>Would you like to authorize a Visible Chrome Crawler to physically bypass the defense?</p>
+                    <div style="display: flex; gap: 15px; justify-content: center;">
+                        <button id="modal-cancel-btn" class="secondary-btn" style="flex: 1; padding: 12px; font-weight: 500;">Abort Scrape</button>
+                        <button id="modal-confirm-btn" class="primary-btn" style="flex: 1; padding: 12px; font-weight: 600;">Deploy Native</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View 1: Input Dashboard -->
+            <section id="view-dashboard" class="view active-view">
+                <div class="card glass-card">
+                    <div class="card-header">
+                        <div class="icon-ring"><i class="ph ph-rocket-launch"></i></div>
+                        <h2>Launch Chromium Native Engine</h2>
+                        <p>Initialize a physical browser session to locate Target Data</p>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="url-input">Target URL</label>
+                        <div class="input-wrapper">
+                            <i class="ph ph-link"></i>
+                            <input type="text" id="url-input" placeholder="e.g., https://example.com" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <div id="error-banner" class="error-banner hidden">
+                        <i class="ph-fill ph-warning-circle"></i>
+                        <span id="error-text">Domain is unreachable.</span>
+                    </div>
+
+                    <button id="start-btn" class="primary-btn">
+                        <span>Open Browser & Scrape Data</span>
+                        <i class="ph ph-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- View 2: Loading Extraction -->
+            <section id="view-loading" class="view hidden">
+                <div class="loading-container" style="padding-top: 50px;">
+                    <div class="spinner-ring"></div>
+                    <h2 id="loading-title" style="margin-top: 20px;">Bypassing Defenses <span class="dots">...</span></h2>
+                    
+                    <div class="progress-bar-container" style="margin-top: 30px;">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View 3: Extraction Results & AI Prompt Sandbox -->
+            <section id="view-results" class="view hidden" style="padding: 20px;">
+                <div class="chat-container" style="flex-direction: column; padding: 20px; background-color: var(--surface-low); border-radius: 12px; border: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div>
+                            <h3 style="color: var(--text-main); font-size: 16px;">Stage 2: Target Extracted Data</h3>
+                            <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Data cached perfectly. The LLM executes natively without requiring further scraping!</p>
+                        </div>
+                        <button id="new-scrape-btn" class="secondary-btn" style="width: auto; padding: 8px 16px;">
+                            New Scrape <i class="ph ph-arrows-clockwise"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- V16 Isolated Execution Block -->
+                    <div class="input-group" style="margin-bottom: 20px;">
+                        <label for="prompt-input" style="color: var(--text-main); margin-bottom: 10px; display: block; font-weight: 500;">What do you want to safely extract from the cached Scrape Data?</label>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="input-wrapper" style="flex: 1; margin-bottom: 0;">
+                                <i class="ph ph-terminal-window"></i>
+                                <input type="text" id="prompt-input" placeholder="e.g., Extract all names and phone numbers" autocomplete="off" style="width: 100%;">
+                            </div>
+                            <button id="extract-ai-btn" class="primary-btn" style="width: auto; padding: 10px 20px;">
+                                Extract <i class="ph ph-magic-wand"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <pre id="results-box" style="width: 100%; height: 400px; overflow-y: auto; background-color: var(--bg-dashboard); padding: 15px; border-radius: 8px; border: 1px solid var(--border-subtle); color: var(--text-main); font-family: 'Inter', monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 14px; line-height: 1.6;">Awaiting physical User Instructions...</pre>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
