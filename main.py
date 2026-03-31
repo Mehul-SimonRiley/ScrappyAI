@@ -6,20 +6,16 @@ import threading
 import webview
 import time
 
-# Globally force UTF-8 Terminal Stream Encoding to prevent PyInstaller Windows charmap/IO crashes
+# Securely Hide the Boot Console via Windows API natively
 try:
-    if sys.stdout is None or getattr(sys.stdout, 'closed', True):
-        sys.stdout = open(os.devnull, "w", encoding="utf-8")
-    elif hasattr(sys.stdout, 'buffer'):
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-        
-    if sys.stderr is None or getattr(sys.stderr, 'closed', True):
-        sys.stderr = open(os.devnull, "w", encoding="utf-8")
-    elif hasattr(sys.stderr, 'buffer'):
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    import ctypes
+    kernel32 = ctypes.WinDLL('kernel32')
+    user32 = ctypes.WinDLL('user32')
+    hWnd = kernel32.GetConsoleWindow()
+    if hWnd:
+        user32.ShowWindow(hWnd, 0) # 0 = SW_HIDE
 except Exception:
-    sys.stdout = open(os.devnull, "w", encoding="utf-8")
-    sys.stderr = open(os.devnull, "w", encoding="utf-8")
+    pass
 
 def safe_print(*args, **kwargs):
     """Fallback secure logger for unmapped visual binaries."""

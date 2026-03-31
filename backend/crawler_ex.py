@@ -361,25 +361,38 @@ def execute_generative_fallback(prompt, structured_data_json, raw_text, logger=p
     start_time = time.time()
     
     try:
-        # Load Model and Tokenizer dynamically into GPU VRAM
-        model_name = "Qwen/Qwen2.5-1.5B-Instruct"
-        logger(f"   -> Instantiating {model_name} offline model weights. This is heavily VRAM bound...")
+        import os
+        import sys
+        
+        def resource_path(relative_path):
+            try:
+                base_path = sys._MEIPASS
+            except Exception:
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
+            
+        qwen_path = resource_path(os.path.join("offline_models", "qwen"))
+        bge_path = resource_path(os.path.join("offline_models", "bge"))
+        
+        # Load Model and Tokenizer dynamically into GPU VRAM completely offline
+        logger(f"   -> Instantiating Qwen-1.5B (3.5GB+) locally from bundled PyInstaller weights. (Heavy VRAM Ops)...")
         device = "cuda" if torch.cuda.is_available() else "cpu"
         
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(qwen_path, local_files_only=True)
         model = AutoModelForCausalLM.from_pretrained(
-            model_name,
+            qwen_path,
             torch_dtype=torch.float16, 
-            device_map="auto"
+            device_map="auto",
+            local_files_only=True
         )
-        
         # 1. Semantic Embedding Routing (E5 / BGE-M3 Logic)
         logger("   -> [Semantic Router] Compressing context blocks using Vector Embeddings to prevent LLM hallucination...")
         from sentence_transformers import SentenceTransformer
         from sklearn.metrics.pairwise import cosine_similarity
         import numpy as np
         
-        embedder = SentenceTransformer("BAAI/bge-large-en-v1.5", device=device)
+        logger("   -> Booting BGE-M3 Embedding Vectors directly from PyInstaller bounds...")
+        embedder = SentenceTransformer(bge_path, device=device)
         
         # Parse the structured JSON correctly instead of breaking it natively
         parsed_json = json.loads(structured_data_json)
