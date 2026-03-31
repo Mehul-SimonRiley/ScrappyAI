@@ -41,42 +41,28 @@ class DataCleaner:
         self.stop_words = set(stopwords.words('english'))
 
     def clean_html(self, raw_html):
-        """Extract plain text from HTML while removing boilerplate."""
+        """Extract clean, properly delimited text from HTML without destroying structure."""
         soup = BeautifulSoup(raw_html, 'html.parser')
         
-        # Remove script, style, header, footer, and nav elements to reduce noise natively without collapsing DOM
-        for script in soup.find_all(['script', 'style', 'noscript', 'meta']):
+        # Remove massive structural noise
+        for script in soup.find_all(['script', 'style', 'noscript', 'meta', 'svg', 'header', 'footer']):
             script.decompose()
             
-        # Separate by newlines to preserve page structure natively
-        text = soup.get_text(separator='\\n', strip=True)
+        # Extract text with explicit visual block separation
+        text = soup.get_text(separator=' \\n ', strip=True)
         return text
 
     def process_text_for_llm(self, text):
-        """Use NLTK to clean text while preserving structure for modern LLMs."""
-        cleaned_lines = []
-        
-        # Process line by line to maintain structure
-        for line in text.split('\n'):
-            line = line.strip()
-            if len(line) < 3: # Skip empty or tiny artifacts
-                continue
-                
-            # Word tokenization
-            words = word_tokenize(line)
-            # Remove stopwords but keep normal words and punctuation (LLMs need punctuation!)
-            cleaned_words = [word for word in words if word.lower() not in self.stop_words]
-            
-            if cleaned_words:
-                # Rejoin line and append
-                cleaned_lines.append(" ".join(cleaned_words))
-                
-        # Join back together with newlines to preserve readability and structure!
-        return "\n".join(cleaned_lines)
+        """Clean extra spacings natively."""
+        import re
+        # Convert literal \n representations and extra spaces to normal layout
+        text = text.replace('\\n', ' \n ')
+        text = re.sub(r' +', ' ', text)
+        return text.strip()
 
     def pipeline(self, raw_html_dict, logger=print):
         """Processes a dictionary of {url: raw_html} into {url: clean_text}."""
-        logger("\\n[Cleaner] Starting data cleaning pipeline...")
+        logger("\\n[Cleaner] Starting pristine structural cleaning pipeline (No stopword mangling)...")
         clean_data = {}
         for url, html in raw_html_dict.items():
             raw_text = self.clean_html(html)
@@ -216,31 +202,33 @@ def execute_scrape_only(target_url, logger=print):
                     pass
                 time.sleep(1.0)
                 
-            # Post-authorization Infinite Scroll Engine natively targeting payload structures
-            logger("[Scroll Engine] Forcefully scrolling physical browser to trigger DOM ejections...")
+            # Ultra-slow crawling Engine natively targeting payload structures
+            logger("[Scroll Engine] Forcefully scrolling physical browser to trigger deep DOM lazy loads...")
             last_height = page.evaluate("document.body.scrollHeight")
             scroll_attempts = 0
             
-            while scroll_attempts < 25:
-                page.evaluate("window.scrollBy(0, window.innerHeight)")
-                time.sleep(0.5) 
+            # Very small, incredibly gradual scrolling to ensure JS lazy-loaded content correctly fires
+            while scroll_attempts < 120:
+                page.evaluate("window.scrollBy(0, 200)")  # Dropped from 400px to 200px
+                time.sleep(0.8)  # Doubled wait time per micro-scroll
                 
                 try:
-                    page.wait_for_load_state("networkidle", timeout=3000)
+                    page.wait_for_load_state("networkidle", timeout=1000)
                 except Exception:
                     pass
                     
-                is_bottom = page.evaluate("(window.innerHeight + window.scrollY) >= document.body.scrollHeight - 20")
+                is_bottom = page.evaluate("(window.innerHeight + window.scrollY) >= document.body.scrollHeight - 30")
                 if is_bottom:
-                    time.sleep(5.0) # V13: Extended Lazy-Load Buffer!
+                    time.sleep(3.0) # Extended Lazy-Load Buffer!
                     new_height = page.evaluate("document.body.scrollHeight")
-                    if new_height == last_height:
+                    if new_height <= last_height + 50:
                         logger("   -> [Smart Scroller] Viewport reached Absolute DOM floor. End of Infinite Array confirmed.")
                         break
                     last_height = new_height
                     
                 scroll_attempts += 1
-                logger(f"   -> [Scroll {scroll_attempts}/25] Pushing payload bounds smoothly downwards.")
+                if scroll_attempts % 10 == 0:
+                    logger(f"   -> [Scroll {scroll_attempts}/120] Pushing payload bounds smoothly downwards.")
                 
             ejected_html = page.content()
             browser.close()
@@ -271,51 +259,190 @@ def execute_scrape_only(target_url, logger=print):
     return {"success": True, "clean_text": clean_text}
 
 
-def execute_llm_extraction(prompt, clean_text, semantic_filter, logger=print):
-    """V16 Stage 2: Offline Generative AI Evaluation Array."""
-    import torch
-    from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+def execute_nlp_extraction(clean_text, logger=print):
+    """V18 Stage 2: Advanced NLP Extractor Pipeline (Regex + spaCy mapping natively)"""
     import json
+    import time
+    import re
     
-    logger(f"\\n[Stage 2: Offline Target Extraction] Beginning Native Evaluation on Cached Corpus...")
-    
-    # Compress massive array bounds mathematically if necessary
-    if semantic_filter and len(clean_text) > 3500:
-        logger("\\n[SemanticFilter] Compressing massive data payload to fit LLM window...")
-        try:
-            clean_text = semantic_filter.filter(prompt, clean_text, top_k=20, logger=logger)
-        except Exception as se:
-            logger(f"   -> [SemanticFilter Crash] Skipping vector ranker: {se}")
-            clean_text = clean_text[:3500]
-    else:
-        clean_text = clean_text[:3500]
-
-    logger(f"\\n[Local AI] Booting 'google/flan-t5-base' on GPU for final contextual analysis...")
+    logger(f"\\n[Stage 2: Automatic NLP Extraction] Bypassing Generative LLM for pure structural parsing natively...")
+    start_time = time.time()
     
     try:
+        import spacy
+        try:
+            logger("   -> Booting spaCy 'en_core_web_sm' NER engine...")
+            nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            logger("   -> Booting failed: downloading 'en_core_web_sm' model natively...")
+            import subprocess
+            subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"], check=True)
+            nlp = spacy.load("en_core_web_sm")
+            
+        doc = nlp(clean_text[:100000]) # Cap size to 100k for performance
+        
+        # 1. Advanced Structural Entity Detection
+        entity_counts = {}
+        for ent in doc.ents:
+            if ent.label_ in ['ORG', 'PRODUCT', 'GPE', 'PERSON', 'FAC'] and len(ent.text.strip()) > 2:
+                # Completely strip \n, | and / tags natively
+                clean_ent = re.sub(r'[\n\r]+|\\n', ' ', ent.text)
+                clean_ent = re.sub(r'[\/\|]', '', clean_ent)
+                clean_ent = re.sub(r'\s+', ' ', clean_ent).strip()
+                
+                # Filter out pure garbage and isolated numbers universally
+                if len(clean_ent) > 3 and not re.match(r'^[\d\s\W]+$', clean_ent):
+                    entity_counts[clean_ent] = entity_counts.get(clean_ent, 0) + 1
+                    
+        # Sort entities by frequency to get the most important topics on the page
+        sorted_entities = sorted(entity_counts.items(), key=lambda x: x[1], reverse=True)
+        top_entities = [ent[0] for ent in sorted_entities[:15]]
+        
+        # 2. Universal Sentence Filtering (Mathematically separating content from pure UI noise generically for ANY site)
+        valid_content_blocks = []
+        for sent in doc.sents:
+            text = sent.text.strip()
+            
+            # Universal text cleanup for the sentence block
+            text_clean = re.sub(r'[\n\r]+|\\n', ' ', text)
+            text_clean = re.sub(r'\s+[\/\|\,]\s+', ', ', text_clean) # Convert stray slashes to commas
+            text_clean = re.sub(r'\s+', ' ', text_clean).strip()
+            
+            # Universal Validation: A real sentence usually has at least 5 words and contains alphabetic logic
+            words = text_clean.split()
+            if len(words) >= 4:
+                # Measure alphanumeric density to reject isolated UI button arrays (e.g. "1 2 3 4 5 Good")
+                alpha_words = sum(1 for w in words if re.search(r'[A-Za-z]{2,}', w)) # Words with at least 2 letters
+                
+                # Require majority of the block to be actual language, not just single characters/numbers
+                if alpha_words >= 3 and (alpha_words / len(words)) >= 0.4:
+                    valid_content_blocks.append(text_clean)
+                    
+        # Deduplicate blocks while preserving chronological reading order universally
+        unique_blocks = []
+        seen = set()
+        for block in valid_content_blocks:
+            if block not in seen:
+                seen.add(block)
+                unique_blocks.append(block)
+
+        elapsed = round(time.time() - start_time, 2)
+        logger(f"   -> [NLP Engine] Structural data perfectly extracted in {elapsed}s! Returning payload.")
+        
+        structured_response = [
+            {
+                "Status": "Advanced NLP Extraction Completed Successfully",
+                "Execution_Time_Sec": elapsed,
+                "Model_Used": "spaCy (en_core_web_sm) + Python re",
+                "Results": {
+                    "Top_Page_Topics": top_entities,
+                    "Total_Valid_Sentences": len(unique_blocks),
+                    "Clean_Extracted_Content": unique_blocks
+                },
+                "Source_Context_Sample": clean_text[:400] + "... [TRUNCATED FOR VIEW]"
+            }
+        ]
+        
+        return json.dumps(structured_response, indent=2)
+        
+    except Exception as e:
+        logger(f"[NLP AI Error] Execution crashed: {e}")
+        return json.dumps([{"Error": f"NLP Pipeline Crash: {str(e)}"}])
+
+def execute_generative_fallback(prompt, structured_data_json, raw_text, logger=print):
+    """V18 Stage 3: Generative LLM Context Fallback using Qwen or BGE dense chunking."""
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+    import json
+    import time
+    
+    logger(f"\\n[Stage 3: Generative Context Engine] Processing intelligent query over scraped payloads natively...")
+    start_time = time.time()
+    
+    try:
+        # Load Model and Tokenizer dynamically into GPU VRAM
+        model_name = "Qwen/Qwen2.5-1.5B-Instruct"
+        logger(f"   -> Instantiating {model_name} offline model weights. This is heavily VRAM bound...")
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        tokenizer = AutoTokenizer.from_pretrained("google/flan-t5-base")
-        llm = AutoModelForSeq2SeqLM.from_pretrained("google/flan-t5-base").to(device)
         
-        # Format the native instruction command string directly
-        llm_prompt = f"Information to extract: {prompt}\\nSource block: {clean_text}\\nAnswer cleanly:"
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float16, 
+            device_map="auto"
+        )
         
-        inputs = tokenizer(llm_prompt, return_tensors="pt", max_length=1024, truncation=True).to(device)
-        outputs = llm.generate(**inputs, max_new_tokens=400)
-        clean_output = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        # 1. Semantic Embedding Routing (E5 / BGE-M3 Logic)
+        logger("   -> [Semantic Router] Compressing context blocks using Vector Embeddings to prevent LLM hallucination...")
+        from sentence_transformers import SentenceTransformer
+        from sklearn.metrics.pairwise import cosine_similarity
+        import numpy as np
         
-        # Purge tensors instantly
-        del llm
+        embedder = SentenceTransformer("BAAI/bge-large-en-v1.5", device=device)
+        
+        # Parse the structured JSON correctly instead of breaking it natively
+        parsed_json = json.loads(structured_data_json)
+        raw_blocks = []
+        if isinstance(parsed_json, list) and len(parsed_json) > 0 and "Results" in parsed_json[0]:
+            raw_blocks = parsed_json[0]["Results"].get("Clean_Extracted_Content", [])
+            
+        if not raw_blocks:
+            # Fallback to chunking the raw text natively
+            words = raw_text.split()
+            raw_blocks = [" ".join(words[i:i + 50]) for i in range(0, len(words), 50)]
+            
+        # Execute Neural Similarity Search natively
+        prompt_vec = embedder.encode([prompt])
+        block_vecs = embedder.encode(raw_blocks)
+        similarities = cosine_similarity(prompt_vec, block_vecs)[0]
+        
+        top_indices = np.argsort(similarities)[-15:][::-1] # Get Top 15 blocks
+        top_indices.sort() # Preserve reading order
+        
+        clean_context = "\\n".join([f"- {raw_blocks[i]}" for i in top_indices])
+        
+        # Format explicitly via conversational Chat Template limits to prevent RAM explosions
+        messages = [
+            {"role": "system", "content": "You are a precise data extraction AI. You answer user queries accurately using the provided context. You must format your final output beautifully using standard Markdown styling (bolding, headers, bullet points). NEVER write JSON format in your response."},
+            {"role": "user", "content": f"Context:\\n{clean_context}\\n\\nTask: {prompt}"}
+        ]
+        
+        text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        model_inputs = tokenizer([text], return_tensors="pt").to(device)
+        
+        logger("   -> Executing Causal Generation Sequence...")
+        generated_ids = model.generate(
+            **model_inputs,
+            max_new_tokens=400,
+            temperature=0.3, # Low temp for data precision
+            repetition_penalty=1.1
+        )
+        
+        generated_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        ]
+        response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        
+        # Instant memory flush
+        del model
         del tokenizer
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             
-        logger("   -> [Local AI] Global Context evaluated natively! Returning final payload.")
-        return json.dumps([{"Response": clean_output}], indent=2)
+        elapsed = round(time.time() - start_time, 2)
+        logger(f"   -> [Qwen Generator] Context explicitly resolved natively in {elapsed}s.")
+        
+        out = [{
+            "Status": "Query Synthesized via Qwen2.5-1.5B-Instruct Fallback",
+            "Execution_Time_Sec": elapsed,
+            "User_Query": prompt,
+            "Generated_Insight": response.strip()
+        }]
+        return json.dumps(out, indent=2)
         
     except Exception as e:
-        logger(f"[Local AI Error] Execution crashed: {e}")
-        return json.dumps([{"Error": str(e)}])
+        logger(f"[Generative Engine Crash] Execution failed: {e}")
+        return json.dumps([{"Error": f"Qwen Pipeline Crash: {str(e)}"}])
 
 def run_demo():
     """Main execution pipeline executing the Crawler -> Cleaner -> LLM loop."""

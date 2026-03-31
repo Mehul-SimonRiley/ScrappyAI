@@ -6,8 +6,8 @@ import time
 import requests
 import urllib.parse
 
-# Import our decoupled V16 backend architecture routines
-from backend.crawler_ex import execute_scrape_only, execute_llm_extraction
+# Import our decoupled V18 multi-model backend architecture routines
+from backend.crawler_ex import execute_scrape_only, execute_nlp_extraction, execute_generative_fallback
 
 class BackendApi:
     """
@@ -117,40 +117,56 @@ class BackendApi:
             if not self._last_corpus.strip():
                 return {"success": False, "error": "Unable to extract text nodes natively. DOM might have been empty."}
                 
-            print("[Backend API] Scrape Payload successfully cached natively. Proceeding to Stage 2.")
-            return {"success": True, "answer": "Physical DOM Scrape succeeded! Payload stored dynamically. Awaiting AI Prompts."}
+            self.update_status("Processing Advanced NLP Extraction natively...", 90)
+            
+            # Immediately run the NLP structure mapping natively (Stage 2)
+            answer_json = execute_nlp_extraction(
+                clean_text=self._last_corpus,
+                logger=print
+            )
+            
+            # Store structural mapping natively for fallback AI routing
+            self._last_json = answer_json
+            
+            self.update_status("Finalizing Response", 100)
+            print("[Backend API] Scrape & Extract successfully completed natively.")
+            
+            return {"success": True, "answer": answer_json}
             
         except Exception as e:
-            return {"success": False, "error": f"Fatal Backend Stage 1 Error: {str(e)}"}
+            return {"success": False, "error": f"Fatal Backend Operations Error: {str(e)}"}
 
     def execute_ai_query(self, text):
-        """V16 Stage 2: Live Generative AI offline interaction handler."""
-        if not hasattr(self, '_last_corpus') or not self._last_corpus:
-            return '[{"Error": "System Error: No baseline corpus found. Please deploy Stage 1 Scraper first."}]'
+        """V18 Stage 3: Generative LLM Fallback interaction using Qwen."""
+        if not hasattr(self, '_last_json') or not self._last_corpus:
+            return '[{"Error": "System Error: No baseline corpus mapping found. Please deploy Stage 1 Scraper first."}]'
             
-        print(f"\\n[Backend API] Evaluating Custom User Prompt: '{text}' natively against local HTML payload bounds...\\n")
+        print(f"\\n[Backend API] Evaluating Custom User Prompt against Qwen Fallback: '{text}' natively...\\n")
         
-        # Instantiate Persistent Micro-AI natively inside the App state once
-        if not self.semantic_filter:
-            from backend.crawler_ex import SemanticFilter
-            self.semantic_filter = SemanticFilter()
-            
-        # Execute Offline Inference on Local Tensors natively
-        answer_json = execute_llm_extraction(
+        # Execute Offline Inference on Local Generative Tensors natively using structured JSON
+        answer_json = execute_generative_fallback(
             prompt=text,
-            clean_text=self._last_corpus,
-            semantic_filter=self.semantic_filter,
+            structured_data_json=self._last_json,
+            raw_text=self._last_corpus,
             logger=print
         )
         
         return answer_json
 
+def resource_path(relative_path):
+    """ Dynamically route assets to support PyInstaller temp C: bounds natively. """
+    try:
+        # PyInstaller extracts to _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 def main():
     api = BackendApi()
     
-    # Path to our new modern Web UI
-    html_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'index.html')
+    # Path to our new modern Web UI mathematically linked to PyInstaller resources
+    html_path = resource_path(os.path.join('frontend', 'index.html'))
     
     # Create the native desktop window wrapping our HTML
     window = webview.create_window(

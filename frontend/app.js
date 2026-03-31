@@ -115,13 +115,20 @@ startBtn.addEventListener('click', async () => {
     switchView('view-loading', 'Active Task: Target Browser Scrape');
     
     try {
-        // CALL PYTHON BACKEND EXPOSED STAGE 1 API
+        // CALL PYTHON BACKEND EXPOSED STAGE 1 AUTOMATED API
         const result = await window.pywebview.api.start_scraping(url);
         
         if (result.success) {
-            // Move to clean results viewer where the user can now prompt the AI
-            switchView('view-results', 'Stage 2: Target Extracted Data');
-            resultsBox.innerText = result.answer; 
+            // Move to clean results viewer bypassing the prompt entirely natively
+            switchView('view-results', 'Final Extracted Payload');
+            
+            try {
+                const data = JSON.parse(result.answer);
+                resultsBox.innerText = JSON.stringify(data, null, 4);
+            } catch(e) {
+                // Failsafe serialization
+                resultsBox.innerText = result.answer; 
+            }
         } else {
             // Backend failed (fake URL, 404, bot block, etc)
             switchView('view-dashboard', 'Launch Chromium Native Engine');
@@ -129,43 +136,45 @@ startBtn.addEventListener('click', async () => {
         }
     } catch (e) {
         switchView('view-dashboard', 'Launch Chromium Native Engine');
-        showError("Failed to communicate with PyWebView Stage 1 Backend.");
+        showError("Failed to communicate with PyWebView Backend.");
     }
 });
 
-// Stage 2: Offline Generative AI Target Extraction
+// Stage 3: Offline Generative AI Context Fallback (Qwen)
 document.getElementById('extract-ai-btn').addEventListener('click', async () => {
     const promptInput = document.getElementById('prompt-input');
     const prompt = promptInput.value.trim();
     
     if (!prompt) {
-        resultsBox.innerText = "Please specify what exactly to extract from the scraped data...\\n\\nExample: 'Extract all restaurants and phone numbers.'";
+        resultsBox.innerText = "Please specify an analytical query for the local LLM!\\n\\nExample: 'Summarize the worst reviews.'";
         return;
     }
     
-    resultsBox.innerText = "🧠 Initializing Local Generative AI Tensor inference natively...\\nSearching cached raw data...";
+    resultsBox.innerText = `🧠 Booting Local GPU Generative AI [Qwen-1.5B]...\\nParsing your contextual query natively against extracted data.\\nThis may take 15-30s...`;
     document.getElementById('extract-ai-btn').innerHTML = '<i class="ph ph-spinner"></i>';
     
     try {
-        // Calling Stage 2 Endpoint locally WITHOUT triggering network scraping
+        // Calling Stage 3 Context-Generation Endpoint locally
         const jsonStr = await window.pywebview.api.execute_ai_query(prompt);
         
         try {
             const data = JSON.parse(jsonStr);
-            if (data[0] && data[0].Response) {
-                resultsBox.innerText = data[0].Response;
-            } else if (data[0] && data[0].Error) {
-                resultsBox.innerText = "Execution Fault: " + data[0].Error;
+            if (data[0] && data[0].Error) {
+                resultsBox.innerHTML = marked.parse("**LLM Fault:** " + data[0].Error);
+            } else if (data[0] && data[0].Generated_Insight) {
+                // RENDER ELEGANT MARKDOWN USING MARKED.JS (ChatGPT Style)
+                resultsBox.innerHTML = marked.parse(data[0].Generated_Insight);
             } else {
-                resultsBox.innerText = JSON.stringify(data, null, 2);
+                // Fallback for raw Arrays
+                resultsBox.innerHTML = `<pre style="white-space: pre-wrap; word-wrap: break-word;">${JSON.stringify(data, null, 4)}</pre>`;
             }
         } catch(parseErr) {
-            resultsBox.innerText = jsonStr; // Direct fallback
+            resultsBox.innerHTML = jsonStr; // Direct fallback
         }
     } catch (e) {
-        resultsBox.innerText = "Failed to communicate with PyWebView AI Tensors.";
+        resultsBox.innerText = "Failed to communicate with PyWebView Context Model.";
     }
     
-    document.getElementById('extract-ai-btn').innerHTML = 'Extract <i class="ph ph-magic-wand"></i>';
+    document.getElementById('extract-ai-btn').innerHTML = 'Analyze <i class="ph ph-brain"></i>';
 });
 

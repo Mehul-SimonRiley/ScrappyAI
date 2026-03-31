@@ -1,0 +1,11 @@
+beautifulsoup4==4.12.3
+playwright==1.42.0
+pywebview==5.0.0
+spacy==3.8.0
+en-core-web-sm==3.8.0
+torch
+transformers
+accelerate
+sentence-transformers
+scikit-learn
+numpy

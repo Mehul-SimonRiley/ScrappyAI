@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Phosphor Icons for modern minimalist icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="light-theme">
@@ -98,29 +99,31 @@
                 <div class="chat-container" style="flex-direction: column; padding: 20px; background-color: var(--surface-low); border-radius: 12px; border: 1px solid var(--border-subtle);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <div>
-                            <h3 style="color: var(--text-main); font-size: 16px;">Stage 2: Target Extracted Data</h3>
-                            <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Data cached perfectly. The LLM executes natively without requiring further scraping!</p>
+                            <h3 style="color: var(--text-main); font-size: 16px;">Final Extracted Structural Payload</h3>
+                            <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Data cached and mathematically mapped via Automated NLP Pipeline natively.</p>
                         </div>
                         <button id="new-scrape-btn" class="secondary-btn" style="width: auto; padding: 8px 16px;">
                             New Scrape <i class="ph ph-arrows-clockwise"></i>
                         </button>
                     </div>
                     
-                    <!-- V16 Isolated Execution Block -->
+                    <!-- V18 Multi-Model Context Engine UI -->
                     <div class="input-group" style="margin-bottom: 20px;">
-                        <label for="prompt-input" style="color: var(--text-main); margin-bottom: 10px; display: block; font-weight: 500;">What do you want to safely extract from the cached Scrape Data?</label>
+                        <label for="prompt-input" style="color: var(--text-main); margin-bottom: 10px; display: block; font-weight: 500;">Generative Request (Fallback): Ask a contextual query based on the NLP data below</label>
                         <div style="display: flex; gap: 10px;">
                             <div class="input-wrapper" style="flex: 1; margin-bottom: 0;">
                                 <i class="ph ph-terminal-window"></i>
-                                <input type="text" id="prompt-input" placeholder="e.g., Extract all names and phone numbers" autocomplete="off" style="width: 100%;">
+                                <input type="text" id="prompt-input" placeholder="e.g., 'Summarize the most common negative complaints' or 'Give me the full address'" autocomplete="off" style="width: 100%;">
                             </div>
                             <button id="extract-ai-btn" class="primary-btn" style="width: auto; padding: 10px 20px;">
-                                Extract <i class="ph ph-magic-wand"></i>
+                                Analyze <i class="ph ph-brain"></i>
                             </button>
                         </div>
                     </div>
                     
-                    <pre id="results-box" style="width: 100%; height: 400px; overflow-y: auto; background-color: var(--bg-dashboard); padding: 15px; border-radius: 8px; border: 1px solid var(--border-subtle); color: var(--text-main); font-family: 'Inter', monospace; white-space: pre-wrap; word-wrap: break-word; font-size: 14px; line-height: 1.6;">Awaiting physical User Instructions...</pre>
+                    <div id="results-box" class="markdown-body" style="width: 100%; height: 400px; overflow-y: auto; background-color: var(--bg-dashboard); padding: 20px; border-radius: 8px; border: 1px solid var(--border-subtle); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.6;">
+                        <em>Awaiting physical User Instructions...</em>
+                    </div>
                 </div>
             </section>
 

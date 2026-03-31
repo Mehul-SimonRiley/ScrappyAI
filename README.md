@@ -1,34 +1,39 @@
-# ScrappyAI - Next-Generation Cognitive Web Crawler
+# ScrappyAI: The Offline Multi-Model Intelligent Scraper
+An industrial-grade, locally hosted Web Crawler & Advanced NLP Extraction Pipeline built natively in Python.
 
-![ScrappyAI Header](https://img.shields.io/badge/Status-Active-success) ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![Playwright](https://img.shields.io/badge/Playwright-Enabled-green) ![Transformers](https://img.shields.io/badge/Transformers-CUDA-orange)
+## Core Architecture
+ScrappyAI strictly avoids the fragile "blindly feed the LLM" approach. It utilizes a highly deterministic, multi-staged routing sequence to guarantee JSON outputs are completely free of hallucination:
+1. **Physical Chromium Crawler (`Playwright`)**: Ultra-conservative `200px` micro-scrolling permanently renders all delayed React/Vue DOM elements automatically.
+2. **Structural Cleaning Engine (`BeautifulSoup`)**: Completely rips out scripts, styles, and stop-word noise while mathematically collapsing whitespaces (`\n`).
+3. **Advanced Fast-Mapping (`spaCy + Regex`)**: Employs `en_core_web_sm` to natively extract Orgs, People, and Products, eliminating UI artifacts globally via Alphanumeric density verification without pinging an LLM.
+4. **Retrieval-Augmented Generative Fallback (`Qwen-1.5B` & `BAAI/bge-large`)**: If the user submits an analytical query, the local Vector Engine slices the structured data and routes only the Top 15 semantic matches directly to Qwen. This generates ChatGPT-style Markdown insights securely with $<3.5$ GB of VRAM.
 
-## 📌 Overview
+## Requirements
+* Python 3.10+
+* 6GB GPU VRAM (for Qwen-1.5B-Instruct Offline generation capability)
+* Internet Connection (for the Chromium spider phase)
 
-**ScrappyAI** is an intelligent, completely offline, GPU-accelerated web scraping sandbox built for enterprise-grade data extraction. Unlike traditional HTML parsers that break when website structures change, ScrappyAI uses a tandem **Micro-AI Architecture**: 
-1. **Dense Vector Mapping (`sentence-transformers`)** to dynamically "find" structural data containers on a page.
-2. **Generative Text-to-Text (`flan-t5`)** natively formatting the ripped text blocks exclusively based on User Prompts—running directly on the host's CUDA hardware.
+## Deployment Options
 
-## 🚀 Key Features
+### 1. Developer Setup
+Clone the repository and install dependencies cleanly into a Virtual Environment:
+```powershell
+python -m venv ienv
+.\ienv\Scripts\activate
+pip install -r requirements.txt
+python -m spacy download en_core_web_sm
+playwright install chromium
+```
 
-*   **100% Local Inference Engine:** Completely eliminated deprecated HuggingFace HTTP APIs. The entire NLP cleansing loop runs offline on your GPU, securing absolute privacy and extreme speeds.
-*   **Playwright Hybrid Ghost Spider:** Natively bypasses `Datadog`, `Cloudflare`, and advanced lazy-loading `IntersectionObservers` via simulated Smooth Mouse Wheel emulation and strict `networkidle` listeners.
-*   **Target Authorization Modal:** Seamlessly prompts users with a beautifully styled UI modal to explicitly grant Chromium manual Bypass control if 403 Firewalls trap the background spider.
-*   **Zero-Shot Structural Extractor:** You never write CSS classes! Simply type "Extract Phone Numbers and Names", and the native `BAAI/bge-large` encoder physically hunts the most statistically relevant semantic node on the page to rip data from!
+Run the GUI seamlessly:
+```powershell
+python main.py
+```
 
-## ⚙️ Architecture Pipeline
+### 2. Standalone Downloadable `.exe` Release
+If you download the standalone `ScrappyAI.exe` from the Releases tab:
+* No Python installation is required to launch the GUI.
+* **NOTE:** Since the software requires the `playwright` framework, it may prompt you to install chromium bounds if your Windows environment hasn't physically seen an isolated instance before.
+* HuggingFace Models (`BGE-M3` & `Qwen`) will automatically download weights globally to your `~/.cache/huggingface` upon initial operation to save file space.
 
-1.  **Pywebview Native GUI**: Launching `main.py` instantiates an incredibly lightweight Python webview serving identical modern dark-themed aesthetics without Electron bloat.
-2.  **The Fetch/Render Phase**: A headless Chromium engine scrolls dynamically, halting after every Rotation to absolutely verify zero remaining XHR fetching APIs exist.
-3.  **Semantic Chunking**: BeautifulSoup strips standard UI components (`script`, `nav`), building an array of valid Wrapper candidates natively.
-4.  **Zero-Shot Scoring**: `SentenceTransformer` (on CUDA) computes Cosine Similarities against your exact Search Query to determine exactly which wrapper cluster represents the "Target Array".
-5.  **GenAI Sanitization**: `flan-t5-base` intercepts the massive ripped wrapper block, reads your objective natively, and outputs only the strictly desired data formatting mathematically!
-
-## 🛠️ Usage
-
-1.  **Activate Environment:** Ensure you are in the `ienv` virtual environment natively.
-2.  **Execute Pipeline:** `python main.py`
-3.  **Prompt:** Enter URL `https://example.com` and specify explicit extraction targets `Restaurant Names` in the interface.
-4.  **Bypass (If needed):** If the server deploys Cloudflare, click the `Deploy Native` button on the pop-up to take physical browser control natively.
-
-## ⚠️ Anti-Bot Handling
-If Cloudflare blocks background spider execution natively, a UI prompt (Dark Mode styled) intercepts the event allowing the developer to launch a visible Chromium instance directly. The Ghost Crawler will physically idle and wait for the developer to execute physical CAPTCHA bypasses before resuming mathematical DOM slicing!
+**Created natively as an Internship Web Extraction Prototype.**

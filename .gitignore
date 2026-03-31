@@ -1,4 +1,20 @@
 ienv/
 __pycache__/
 *.pyc
-*.jsonl
+*.pyo
+*.pyd
+*.log
+scraped_debug_output.txt
+raw_debug_output.txt
+cleaned_context_demo.txt
+
+# PyInstaller Specific
+build/
+dist/
+*.spec
+*.exe
+
+# Large Datasets / Model Caches
+.cache/
+huggingface/
+.pytest_cache/
