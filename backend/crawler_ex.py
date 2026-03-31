@@ -138,10 +138,26 @@ def execute_scrape_only(target_url, logger=print):
     try:
         with sync_playwright() as p:
             # We strictly enforce headless=False so the User verifies the exact layout physically
-            browser = p.chromium.launch(
-                headless=False, 
-                args=["--disable-http2", "--disable-blink-features=AutomationControlled"]
-            )
+            try:
+                browser = p.chromium.launch(
+                    channel="msedge",
+                    headless=False, 
+                    args=["--disable-http2", "--disable-blink-features=AutomationControlled"]
+                )
+            except Exception:
+                try:
+                    logger("[Stage 1: Browse] Native Edge unavailable. Hooking into Google Chrome globally...")
+                    browser = p.chromium.launch(
+                        channel="chrome",
+                        headless=False, 
+                        args=["--disable-http2", "--disable-blink-features=AutomationControlled"]
+                    )
+                except Exception:
+                    logger("[Stage 1: Browse] Native OS browsers unavailable. Falling back to Playwright Internal Chromium...")
+                    browser = p.chromium.launch(
+                        headless=False, 
+                        args=["--disable-http2", "--disable-blink-features=AutomationControlled"]
+                    )
             context = browser.new_context(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
                 ignore_https_errors=True
