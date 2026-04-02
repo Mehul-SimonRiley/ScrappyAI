@@ -5,3 +5,4 @@ ienv/
 *.spec
 *.pyc
 __pycache__/
+*.rar
