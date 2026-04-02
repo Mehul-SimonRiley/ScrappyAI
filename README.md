@@ -16,10 +16,11 @@
 
 ## 📥 Download the Standalone App
 You do not need to install Python to use ScrappyAI natively! 
-1. **[Click Here to Download ScrappyAI V1](#)** *(Replace this hash natively with your Github Release URL once uploaded!)*
-2. Extract the downloaded `ScrappyAI_V1_Offline.zip` anywhere on your computer.
-3. Open the folder and double-click `ScrappyAI_V1.exe`.
-4. *On your very first execution, the system will prompt you for authorization to securely download the required 4.5 GB Artificial Intelligence weights. A temporary console will unhide to show exactly what is downloading. Once complete, it's yours forever!*
+1. **[Download Part 1 Here](#)** and **[Download Part 2 Here](#)** *(Replace these hashes natively with your Github Release URLs!)*
+2. Due to the massive GPU Neural acceleration dependencies (PyTorch / CUDA), the application is distributed as a multi-part archive. Place **both** `.rar` files (`part1` and `part2`) firmly on your Desktop or in the same folder.
+3. Right-click **strictly** on `ScrappyAI_V1.part1.rar` and select "Extract Here". WinRAR will automatically stitch both files together seamlessly!
+4. Open the extracted folder and double-click `ScrappyAI_V1.exe`.
+5. *On your very first execution, the system will prompt you for authorization to securely download the required 4.5 GB Artificial Intelligence weights. A temporary console will unhide to show exactly what is downloading. Once complete, it's yours forever!*
 
 ---
 
