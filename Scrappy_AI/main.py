@@ -173,9 +173,42 @@ class BackendApi:
 
     def execute_ai_query(self, text):
         """V18 Stage 3: Generative LLM Fallback interaction using Qwen."""
+        import os
+        import sys
+        
         if not hasattr(self, '_last_json') or not self._last_corpus:
             return '[{"Error": "System Error: No baseline corpus mapping found. Please deploy Stage 1 Scraper first."}]'
             
+        def persistent_resource_path(relative_path):
+            if getattr(sys, 'frozen', False):
+                base_path = os.path.dirname(sys.executable)
+            else:
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
+            
+        qwen_path = persistent_resource_path(os.path.join("offline_models", "qwen"))
+        bge_path = persistent_resource_path(os.path.join("offline_models", "bge"))
+        
+        if not os.path.exists(qwen_path) or not os.path.exists(bge_path):
+            if self._window.create_confirmation_dialog('AI Core Download Required', 'The Advanced Deep Learning AI Engine (4.5GB) is missing on your device.\\n\\nDo you authorize ScrappyAI to securely download it now? The terminal window will be temporarily unhidden so you can view download progress transparency. This only occurs on the first run.'):
+                self.update_status("Installing AI System Models (View Console for Progress)", 50)
+                import ctypes
+                user32 = ctypes.WinDLL('user32')
+                hWnd = ctypes.WinDLL('kernel32').GetConsoleWindow()
+                if hWnd:
+                    user32.ShowWindow(hWnd, 5) # SW_SHOW
+                try:
+                    from huggingface_hub import snapshot_download
+                    snapshot_download(repo_id="Qwen/Qwen2.5-1.5B-Instruct", local_dir=qwen_path, local_dir_use_symlinks=False, ignore_patterns=["*.msgpack", "*.h5", "*.ot", "*onnx*"])
+                    snapshot_download(repo_id="BAAI/bge-large-en-v1.5", local_dir=bge_path, local_dir_use_symlinks=False, ignore_patterns=["*.msgpack", "*.h5", "*.ot", "*onnx*"])
+                except Exception as e:
+                    return json.dumps([{"Error": f"Network Download Crash: {str(e)}" }])
+                finally:
+                    if hWnd:
+                        user32.ShowWindow(hWnd, 0) # SW_HIDE
+            else:
+                return json.dumps([{"Error": "System Error: Missing AI Models. The Generation sequence legally requires the 4.5 GB weights to proceed seamlessly offline."}])
+
         print(f"\\n[Backend API] Evaluating Custom User Prompt against Qwen Fallback: '{text}' natively...\\n")
         
         # Execute Offline Inference on Local Generative Tensors natively using structured JSON

@@ -364,15 +364,15 @@ def execute_generative_fallback(prompt, structured_data_json, raw_text, logger=p
         import os
         import sys
         
-        def resource_path(relative_path):
-            try:
-                base_path = sys._MEIPASS
-            except Exception:
+        def persistent_resource_path(relative_path):
+            if getattr(sys, 'frozen', False):
+                base_path = os.path.dirname(sys.executable)
+            else:
                 base_path = os.path.abspath(".")
             return os.path.join(base_path, relative_path)
             
-        qwen_path = resource_path(os.path.join("offline_models", "qwen"))
-        bge_path = resource_path(os.path.join("offline_models", "bge"))
+        qwen_path = persistent_resource_path(os.path.join("offline_models", "qwen"))
+        bge_path = persistent_resource_path(os.path.join("offline_models", "bge"))
         
         # Load Model and Tokenizer dynamically into GPU VRAM completely offline
         logger(f"   -> Instantiating Qwen-1.5B (3.5GB+) locally from bundled PyInstaller weights. (Heavy VRAM Ops)...")
